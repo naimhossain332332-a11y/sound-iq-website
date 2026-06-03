@@ -301,7 +301,8 @@ img{display:block;max-width:100%;height:auto}
 }
 .tab-pause-icon{font-size:3rem;margin-bottom:12px}
 .tab-pause-title{font-size:1.2rem;font-weight:700;color:#e8e8ed;margin-bottom:6px}
-.tab-pause-desc{font-size:.85rem;color:#6a6a72;line-height:1.5}
+.tab-pause-desc{font-size:.85rem;color:#6a6a72;line-height:1.5;margin-bottom:16px}
+.pause-btn{margin-top:4px}
 @keyframes fadeIn{from{opacity:0}to{opacity:1}}
 @keyframes scaleIn{from{transform:scale(.92);opacity:0}to{transform:scale(1);opacity:1}}
 

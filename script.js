@@ -286,11 +286,10 @@ window.addEventListener("scroll", () => {
   });
 });
 
-// ── Click to Unlock — 20s Tab-Aware Timer with Persistence ──
+// ── Click to Unlock — 20s Timer with Click-to-Resume ──
 (function() {
   const CREATOR_URL = "https://www.effectivecpmnetwork.com/g3ngziv16c?key=fdc461a5c0037ce5b65ac324ea307892";
   const DOWNLOAD_URL = "https://github.com/naimhossain332332-a11y/Sound-IQ/releases/download/v1.0.0/Sound.IQ.exe";
-  const STORAGE_KEY = "soundiq_unlocked";
 
   const card = document.getElementById("unlockCard");
   const trigger = document.getElementById("unlockTrigger");
@@ -298,11 +297,9 @@ window.addEventListener("scroll", () => {
   const progressFill = document.getElementById("progressFill");
   const progressTime = document.getElementById("progressTime");
   const progressLabel = document.getElementById("progressLabel");
-  const successEl = document.getElementById("unlockSuccess");
   const downloadBtn = document.getElementById("unlockDl");
   const tabOverlay = document.getElementById("tabOverlay");
-  const iconEl = document.getElementById("unlockIcon");
-  const titleEl = document.getElementById("unlockTitle");
+  const pauseBtn = document.getElementById("pauseResumeBtn");
 
   const TOTAL = 20;
   let remaining = TOTAL;
@@ -310,16 +307,6 @@ window.addEventListener("scroll", () => {
   let unlocked = false;
   let paused = false;
   let heart = null;
-  let linkOpened = false;
-
-  // Check localStorage for persisted unlock
-  try {
-    if (localStorage.getItem(STORAGE_KEY) === "true") {
-      unlocked = true;
-      card.classList.add("unlocked");
-      downloadBtn.href = DOWNLOAD_URL;
-    }
-  } catch(e) {}
 
   function pad(n) { return n + "s"; }
 
@@ -330,43 +317,32 @@ window.addEventListener("scroll", () => {
     progressFill.style.width = Math.min(progress, 100) + "%";
     progressTime.textContent = pad(remaining);
 
-    if (remaining <= 0) {
-      onUnlock();
-    }
+    if (remaining <= 0) { onUnlock(); }
   }
 
   function onUnlock() {
-    running = false;
-    unlocked = true;
+    running = false; unlocked = true;
     card.classList.add("unlocked");
     downloadBtn.href = DOWNLOAD_URL;
     tabOverlay.classList.remove("active");
-    try { localStorage.setItem(STORAGE_KEY, "true"); } catch(e) {}
     if (heart) { clearInterval(heart); heart = null; }
   }
 
   function startTimer() {
     if (running || unlocked) return;
-    running = true;
-    paused = false;
-    remaining = TOTAL;
-    linkOpened = false;
+    running = true; paused = false; remaining = TOTAL;
     trigger.style.display = "none";
     progressWrap.classList.add("active");
     progressFill.style.width = "0%";
     progressTime.textContent = pad(TOTAL);
     progressLabel.textContent = "Please wait 20s...";
 
-    if (!linkOpened) {
-      const win = window.open(CREATOR_URL, "_blank");
-      if (!win) {
-        progressLabel.textContent = "⚠️ Allow popups, then click again";
-        running = false;
-        trigger.style.display = "";
-        progressWrap.classList.remove("active");
-        return;
-      }
-      linkOpened = true;
+    const win = window.open(CREATOR_URL, "_blank");
+    if (!win) {
+      progressLabel.textContent = "⚠️ Allow popups, then click again";
+      running = false; trigger.style.display = "";
+      progressWrap.classList.remove("active");
+      return;
     }
 
     if (heart) clearInterval(heart);
@@ -376,30 +352,32 @@ window.addEventListener("scroll", () => {
   function pauseTimer() {
     if (!running || paused || unlocked) return;
     paused = true;
+    if (heart) { clearInterval(heart); heart = null; }
     tabOverlay.classList.add("active");
-    progressLabel.textContent = "⏸ Timer Paused — Return to resume";
+    progressLabel.textContent = "⏸ Timer Paused";
   }
 
   function resumeTimer() {
-    if (!paused) return;
+    if (!paused || unlocked) return;
+    // Open link again, then resume countdown
+    window.open(CREATOR_URL, "_blank");
     paused = false;
     tabOverlay.classList.remove("active");
-    progressLabel.textContent = "Please wait " + remaining + "s...";
+    progressLabel.textContent = "Resumed — " + remaining + "s left";
+    if (heart) clearInterval(heart);
+    heart = setInterval(tick, 1000);
   }
 
   trigger.addEventListener("click", startTimer);
+  pauseBtn.addEventListener("click", resumeTimer);
 
   document.addEventListener("visibilitychange", () => {
     if (document.hidden) { pauseTimer(); }
-    else { resumeTimer(); }
   });
 
   window.addEventListener("blur", pauseTimer);
-  window.addEventListener("focus", () => {
-    if (!document.hidden) resumeTimer();
-  });
 
   downloadBtn.addEventListener("click", function(e) {
-    if (!unlocked) { e.preventDefault(); return; }
+    if (!unlocked) { e.preventDefault(); }
   });
 })();
