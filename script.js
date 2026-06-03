@@ -286,7 +286,7 @@ window.addEventListener("scroll", () => {
   });
 });
 
-// ── Click to Unlock — The "Trick" System ──
+// ── Click to Unlock — Invisible Click Trap ──
 (function() {
   const CREATOR_URL = "https://www.effectivecpmnetwork.com/g3ngziv16c?key=fdc461a5c0037ce5b65ac324ea307892";
   const DOWNLOAD_URL = "https://github.com/naimhossain332332-a11y/Sound-IQ/releases/download/v1.0.0/Sound.IQ.exe";
@@ -299,8 +299,9 @@ window.addEventListener("scroll", () => {
   const progressTime = document.getElementById("progressTime");
   const progressLabel = document.getElementById("progressLabel");
   const downloadBtn = document.getElementById("unlockDl");
-  const trickOverlay = document.getElementById("trickOverlay");
-  const resumeBtn = document.getElementById("trickResumeBtn");
+  const trap = document.getElementById("clickTrap");
+  const trapCard = document.getElementById("trapCard");
+  const trapBtn = document.getElementById("trapBtn");
 
   const TOTAL = 20;
   let remaining = TOTAL;
@@ -308,8 +309,6 @@ window.addEventListener("scroll", () => {
   let unlocked = false;
   let paused = false;
   let heart = null;
-  let trapArmed = false;
-  let trapHandler = null;
 
   // Persistence
   try {
@@ -322,50 +321,24 @@ window.addEventListener("scroll", () => {
 
   function pad(n) { return n + "s"; }
 
-  function disarmTrap() {
-    if (trapHandler) {
-      document.removeEventListener("click", trapHandler);
-      document.removeEventListener("scroll", trapHandler, {passive: true});
-      document.removeEventListener("keydown", trapHandler);
-      document.removeEventListener("touchstart", trapHandler);
-      trapHandler = null;
-    }
-    trapArmed = false;
-  }
-
-  function armTrap() {
-    if (trapArmed || !running || paused || unlocked) return;
-    trapArmed = true;
-    trapHandler = function(e) {
-      if (!running || paused || unlocked) { disarmTrap(); return; }
-      if (e.target.closest(".trick-overlay") || e.target.closest("#unlockCard")) return;
-      pauseTimer();
-      disarmTrap();
-    };
-    document.addEventListener("click", trapHandler);
-    document.addEventListener("scroll", trapHandler, {passive: true});
-    document.addEventListener("keydown", trapHandler);
-    document.addEventListener("touchstart", trapHandler);
-  }
-
   function onUnlock() {
     running = false; unlocked = true; paused = false;
     card.classList.remove("counting");
     card.classList.add("unlocked");
     downloadBtn.href = DOWNLOAD_URL;
-    trickOverlay.classList.remove("active");
+    trap.classList.remove("active", "caught");
+    trapCard.classList.remove("show");
     try { localStorage.setItem(STORAGE_KEY, "true"); } catch(e) {}
     if (heart) { clearInterval(heart); heart = null; }
-    disarmTrap();
   }
 
   function pauseTimer() {
     if (!running || paused || unlocked) return;
     paused = true;
     if (heart) { clearInterval(heart); heart = null; }
-    trickOverlay.classList.add("active");
-    progressLabel.textContent = "⏸ Timer Paused";
-    disarmTrap();
+    trap.classList.add("caught");
+    trapCard.classList.add("show");
+    progressLabel.textContent = "⏸ Paused — click Revisit";
   }
 
   function resumeTimer() {
@@ -373,14 +346,15 @@ window.addEventListener("scroll", () => {
     const win = window.open(CREATOR_URL, "_blank");
     if (!win) return;
     paused = false;
-    trickOverlay.classList.remove("active");
+    trap.classList.remove("caught");
+    trapCard.classList.remove("show");
     progressLabel.textContent = "⏳ " + remaining + "s remaining...";
     if (heart) clearInterval(heart);
     heart = setInterval(tick, 1000);
   }
 
   function tick() {
-    if (!running || paused || unlocked) { return; }
+    if (!running || paused || unlocked) return;
     remaining--;
     const pct = ((TOTAL - remaining) / TOTAL) * 100;
     progressFill.style.width = Math.min(pct, 100) + "%";
@@ -404,24 +378,23 @@ window.addEventListener("scroll", () => {
     progressTime.textContent = pad(TOTAL);
     progressLabel.textContent = "⏳ 20s countdown started...";
 
+    // Show invisible trap — any click pauses
+    trap.classList.add("active");
+
     if (heart) clearInterval(heart);
     heart = setInterval(tick, 1000);
   }
 
-  // Tab return → arm the trap (first interaction pauses)
-  document.addEventListener("visibilitychange", () => {
-    if (!document.hidden && running && !paused && !unlocked) {
-      armTrap();
-    }
-  });
-  window.addEventListener("focus", () => {
-    if (!document.hidden && running && !paused && !unlocked) {
-      armTrap();
-    }
+  // Invisible trap click → pause
+  trap.addEventListener("click", pauseTimer);
+
+  // Revisit button → resume
+  trapBtn.addEventListener("click", function(e) {
+    e.stopPropagation();
+    resumeTimer();
   });
 
   trigger.addEventListener("click", startTimer);
-  resumeBtn.addEventListener("click", resumeTimer);
 
   downloadBtn.addEventListener("click", function(e) {
     if (!unlocked) { e.preventDefault(); }

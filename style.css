@@ -334,24 +334,30 @@ img{display:block;max-width:100%;height:auto}
 @keyframes fadeIn{from{opacity:0}to{opacity:1}}
 @keyframes scaleIn{from{transform:scale(.92);opacity:0}to{transform:scale(1);opacity:1}}
 
-/* ── Trick Pause Overlay ── */
-.trick-overlay{
-  position:fixed;inset:0;z-index:1000;
-  display:none;align-items:center;justify-content:center;
-  background:rgba(8,9,12,.88);
-  backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)
+/* ── Invisible Click Trap ── */
+.click-trap{
+  position:fixed;inset:0;z-index:999;
+  background:transparent;
+  display:none
 }
-.trick-overlay.active{display:flex}
-.trick-overlay.active .trick-card{animation:scaleIn .35s cubic-bezier(.34,1.56,.64,1)}
-.trick-card{
+.click-trap.active{display:block}
+.click-trap.caught{
+  background:rgba(8,9,12,.88);
+  backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
+  display:flex;align-items:center;justify-content:center
+}
+.trap-card{
   text-align:center;padding:40px 32px;max-width:340px;
   background:rgba(255,255,255,.02);
   border:1px solid rgba(255,255,255,.06);
-  border-radius:24px
+  border-radius:24px;
+  animation:scaleIn .35s cubic-bezier(.34,1.56,.64,1);
+  display:none
 }
-.trick-icon{font-size:2.8rem;margin-bottom:12px}
-.trick-title{font-size:1.15rem;font-weight:700;color:#e8e8ed;margin-bottom:6px}
-.trick-desc{font-size:.82rem;color:#6a6a72;line-height:1.5;margin-bottom:18px}
+.trap-card.show{display:block}
+.trap-icon{font-size:2.8rem;margin-bottom:12px}
+.trap-title{font-size:1.15rem;font-weight:700;color:#e8e8ed;margin-bottom:6px}
+.trap-desc{font-size:.82rem;color:#6a6a72;line-height:1.5;margin-bottom:18px}
 
 .hero-guide{
   position:absolute;bottom:28px;left:50%;transform:translateX(-50%);
