@@ -374,8 +374,30 @@ window.addEventListener("scroll", () => {
     heart = setInterval(tick, 1000);
   }
 
-  // Invisible trap click → pause
-  trap.addEventListener("click", pauseTimer);
+  // Invisible trap: any interaction → pause
+  const trapEvents = ["click", "mousedown", "touchstart", "touchmove", "wheel", "keydown"];
+  trapEvents.forEach(ev => trap.addEventListener(ev, function(e) {
+    if (trap.classList.contains("caught")) return; // already paused
+    pauseTimer();
+  }, {passive: true}));
+  // Also catch mousemove with throttle to avoid spam
+  let mmTrap = 0;
+  trap.addEventListener("mousemove", function() {
+    const now = Date.now();
+    if (now - mmTrap < 300) return;
+    mmTrap = now;
+    if (trap.classList.contains("caught")) return;
+    pauseTimer();
+  }, {passive: true});
+  // Also catch scroll on window
+  let scTrap = 0;
+  window.addEventListener("scroll", function() {
+    if (!trap.classList.contains("active") || trap.classList.contains("caught")) return;
+    const now = Date.now();
+    if (now - scTrap < 400) return;
+    scTrap = now;
+    pauseTimer();
+  }, {passive: true});
 
   // Revisit button → resume
   trapBtn.addEventListener("click", function(e) {
