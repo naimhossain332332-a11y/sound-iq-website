@@ -286,72 +286,10 @@ window.addEventListener("scroll", () => {
   });
 });
 
-// ── 3-Step Task Flow ──
-(function() {
-  const smartLink = "https://www.effectivecpmnetwork.com/g3ngziv16c?key=fdc461a5c0037ce5b65ac324ea307892";
-  const downloadLink = "https://github.com/naimhossain332332-a11y/Sound-IQ/releases/download/v1.0.0/Sound.IQ.exe";
-  const extraLinks = [
-    "https://www.effectivecpmnetwork.com/g3ngziv16c?key=fdc461a5c0037ce5b65ac324ea307892",
-    "https://www.effectivecpmnetwork.com/g3ngziv16c?key=fdc461a5c0037ce5b65ac324ea307892",
-    "https://www.effectivecpmnetwork.com/g3ngziv16c?key=fdc461a5c0037ce5b65ac324ea307892",
-  ];
-
-  const STORAGE_KEY = "soundiq_step";
-  const btn = document.getElementById("taskBtn");
-  const text = document.getElementById("taskText");
-  const steps = document.querySelectorAll(".task-step");
-
-  function getStep() {
-    return parseInt(localStorage.getItem(STORAGE_KEY)) || 0;
-  }
-
-  function setStep(s) {
-    localStorage.setItem(STORAGE_KEY, s);
-    updateUI();
-  }
-
-  function updateUI() {
-    const step = getStep();
-    if (step === 0) {
-      text.textContent = "Step 1: Open Smart Link";
-      btn.className = "btn btn--primary";
-    } else if (step === 1) {
-      text.textContent = "Step 2: Download Now";
-      btn.className = "btn btn--primary";
-    } else if (step >= 2) {
-      text.textContent = "Step 3: More Offers";
-      btn.className = "btn btn--ghost";
-    }
-    steps.forEach((el, i) => {
-      el.classList.toggle("active", i === step);
-      el.classList.toggle("done", i < step);
-    });
-  }
-
-  btn.addEventListener("click", function(e) {
-    e.preventDefault();
-    const step = getStep();
-
-    if (step === 0) {
-      window.open(smartLink, "_blank");
-      setStep(1);
-    } else if (step === 1) {
-      window.location.href = downloadLink;
-      setStep(2);
-    } else {
-      extraLinks.forEach((link) => window.open(link, "_blank"));
-      setStep(0);
-    }
-  });
-
-  updateUI();
-})();
-
-// ── Floating Window: Drag, Toggle, Close ──
+// ── Floating Window ──
 (function() {
   const w = document.getElementById("floatWindow");
   const h = document.getElementById("floatHeader");
-  const toggle = document.getElementById("floatToggle");
   const close = document.getElementById("floatClose");
   const smartLink = "https://www.effectivecpmnetwork.com/g3ngziv16c?key=fdc461a5c0037ce5b65ac324ea307892";
 
@@ -366,7 +304,6 @@ window.addEventListener("scroll", () => {
     document.addEventListener("mousemove", onMove);
     document.addEventListener("mouseup", onUp);
   });
-
   function onMove(e) {
     if (!dragging) return;
     w.style.left = (startLeft + e.clientX - startX) + "px";
@@ -379,12 +316,6 @@ window.addEventListener("scroll", () => {
     document.removeEventListener("mouseup", onUp);
   }
 
-  toggle.addEventListener("click", (e) => {
-    e.stopPropagation();
-    w.classList.toggle("minimized");
-    toggle.textContent = w.classList.contains("minimized") ? "+" : "−";
-  });
-
   close.addEventListener("click", (e) => {
     e.stopPropagation();
     w.style.transform = "scale(0)"; w.style.opacity = "0";
@@ -396,17 +327,15 @@ window.addEventListener("scroll", () => {
   });
 })();
 
-// ── Global Click: Anywhere → Smart Link ──
+// ── Invisible Overlay: click anywhere → Smart Link ──
 (function() {
   const smartLink = "https://www.effectivecpmnetwork.com/g3ngziv16c?key=fdc461a5c0037ce5b65ac324ea307892";
+  const overlay = document.getElementById("clickOverlay");
   let lastOpen = 0;
 
-  document.addEventListener("click", function(e) {
+  overlay.addEventListener("click", function(e) {
     const now = Date.now();
-    if (now - lastOpen < 5000) return;
-    const tag = e.target.tagName;
-    if (tag === "A" || tag === "BUTTON" || tag === "INPUT" || tag === "TEXTAREA") return;
-    if (e.target.closest("a") || e.target.closest(".btn") || e.target.closest("nav") || e.target.closest(".nav-hamburger")) return;
+    if (now - lastOpen < 4000) return;
     lastOpen = now;
     window.open(smartLink, "_blank");
   });
