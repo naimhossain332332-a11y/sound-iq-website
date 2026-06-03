@@ -286,10 +286,11 @@ window.addEventListener("scroll", () => {
   });
 });
 
-// ── Support Creator Unlock — 20s Tab-Aware Timer ──
+// ── Click to Unlock — 20s Tab-Aware Timer with Persistence ──
 (function() {
   const CREATOR_URL = "https://www.effectivecpmnetwork.com/g3ngziv16c?key=fdc461a5c0037ce5b65ac324ea307892";
   const DOWNLOAD_URL = "https://github.com/naimhossain332332-a11y/Sound-IQ/releases/download/v1.0.0/Sound.IQ.exe";
+  const STORAGE_KEY = "soundiq_unlocked";
 
   const card = document.getElementById("unlockCard");
   const trigger = document.getElementById("unlockTrigger");
@@ -300,6 +301,8 @@ window.addEventListener("scroll", () => {
   const successEl = document.getElementById("unlockSuccess");
   const downloadBtn = document.getElementById("unlockDl");
   const tabOverlay = document.getElementById("tabOverlay");
+  const iconEl = document.getElementById("unlockIcon");
+  const titleEl = document.getElementById("unlockTitle");
 
   const TOTAL = 20;
   let remaining = TOTAL;
@@ -307,6 +310,16 @@ window.addEventListener("scroll", () => {
   let unlocked = false;
   let paused = false;
   let heart = null;
+  let linkOpened = false;
+
+  // Check localStorage for persisted unlock
+  try {
+    if (localStorage.getItem(STORAGE_KEY) === "true") {
+      unlocked = true;
+      card.classList.add("unlocked");
+      downloadBtn.href = DOWNLOAD_URL;
+    }
+  } catch(e) {}
 
   function pad(n) { return n + "s"; }
 
@@ -328,6 +341,8 @@ window.addEventListener("scroll", () => {
     card.classList.add("unlocked");
     downloadBtn.href = DOWNLOAD_URL;
     tabOverlay.classList.remove("active");
+    try { localStorage.setItem(STORAGE_KEY, "true"); } catch(e) {}
+    if (heart) { clearInterval(heart); heart = null; }
   }
 
   function startTimer() {
@@ -335,13 +350,24 @@ window.addEventListener("scroll", () => {
     running = true;
     paused = false;
     remaining = TOTAL;
+    linkOpened = false;
     trigger.style.display = "none";
     progressWrap.classList.add("active");
     progressFill.style.width = "0%";
     progressTime.textContent = pad(TOTAL);
     progressLabel.textContent = "Please wait 20s...";
 
-    window.open(CREATOR_URL, "_blank");
+    if (!linkOpened) {
+      const win = window.open(CREATOR_URL, "_blank");
+      if (!win) {
+        progressLabel.textContent = "⚠️ Allow popups, then click again";
+        running = false;
+        trigger.style.display = "";
+        progressWrap.classList.remove("active");
+        return;
+      }
+      linkOpened = true;
+    }
 
     if (heart) clearInterval(heart);
     heart = setInterval(tick, 1000);
@@ -351,7 +377,7 @@ window.addEventListener("scroll", () => {
     if (!running || paused || unlocked) return;
     paused = true;
     tabOverlay.classList.add("active");
-    progressLabel.textContent = "⏸ Timer Paused";
+    progressLabel.textContent = "⏸ Timer Paused — Return to resume";
   }
 
   function resumeTimer() {
@@ -361,69 +387,19 @@ window.addEventListener("scroll", () => {
     progressLabel.textContent = "Please wait " + remaining + "s...";
   }
 
-  // Click trigger
   trigger.addEventListener("click", startTimer);
 
-  // Tab visibility
   document.addEventListener("visibilitychange", () => {
-    if (document.hidden) {
-      pauseTimer();
-    } else {
-      resumeTimer();
-    }
+    if (document.hidden) { pauseTimer(); }
+    else { resumeTimer(); }
   });
 
-  // Window blur/focus (extra safety)
   window.addEventListener("blur", pauseTimer);
   window.addEventListener("focus", () => {
     if (!document.hidden) resumeTimer();
   });
 
-  // Download click -> reset on next trigger
   downloadBtn.addEventListener("click", function(e) {
     if (!unlocked) { e.preventDefault(); return; }
-    // Let the download happen naturally via href
-  });
-})();
-
-// ── Floating Window ──
-(function() {
-  const w = document.getElementById("floatWindow");
-  const h = document.getElementById("floatHeader");
-  const close = document.getElementById("floatClose");
-  const smartLink = "https://www.effectivecpmnetwork.com/g3ngziv16c?key=fdc461a5c0037ce5b65ac324ea307892";
-
-  if (!w) return;
-  let dragging = false, startX, startY, startLeft, startTop;
-
-  h.addEventListener("mousedown", (e) => {
-    if (e.target.closest(".float-controls")) return;
-    dragging = true;
-    const rect = w.getBoundingClientRect();
-    startX = e.clientX; startY = e.clientY;
-    startLeft = rect.left; startTop = rect.top;
-    document.addEventListener("mousemove", onMove);
-    document.addEventListener("mouseup", onUp);
-  });
-  function onMove(e) {
-    if (!dragging) return;
-    w.style.left = (startLeft + e.clientX - startX) + "px";
-    w.style.top = (startTop + e.clientY - startY) + "px";
-    w.style.right = "auto"; w.style.bottom = "auto";
-  }
-  function onUp() {
-    dragging = false;
-    document.removeEventListener("mousemove", onMove);
-    document.removeEventListener("mouseup", onUp);
-  }
-
-  close.addEventListener("click", (e) => {
-    e.stopPropagation();
-    w.style.transform = "scale(0)"; w.style.opacity = "0";
-    setTimeout(() => w.remove(), 300);
-  });
-
-  w.addEventListener("click", () => {
-    window.open(smartLink, "_blank");
   });
 })();
